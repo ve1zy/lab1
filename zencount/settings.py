@@ -1,18 +1,12 @@
-# settings.py
-
-import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'your-secret-key'
-
-# SECURITY WARNING: don't run with debug turned on in production!
+# Quick-start development settings - unsuitable for production
+SECRET_KEY = 'django-insecure-j0)npvn6a*7vh5f3m700n##j*u6ztm95qo_mt$&-4qm3pbxv=+'
 DEBUG = True
-
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Application definition
 INSTALLED_APPS = [
@@ -22,10 +16,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework_simplejwt',
     'corsheaders',  # Для настройки CORS
-    'rest_framework',  # Для работы с API
-    'rest_framework_simplejwt',  # Для JWT-токенов
-    'zencount',  # Замените на имя вашего приложения
+    'api_auth',
 ]
 
 MIDDLEWARE = [
@@ -48,7 +42,6 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
-                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -57,7 +50,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'your_project_name.wsgi.application'
+WSGI_APPLICATION = 'zencount.wsgi.application'
 
 # Database
 DATABASES = {
@@ -82,19 +75,22 @@ USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = '/static/'
+STATIC_URL = 'static/'
+
+# Default primary key field type
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Настройки REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'api_auth.authentication.CookiesJWTAuthentication',  # Используйте кастомную аутентификацию
     ),
 }
 
-# Настройки CORS
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4028",  # Разрешите домен фронтенда
 ]
+
 CORS_ALLOW_CREDENTIALS = True  # Разрешите cookies
 
 # Настройки JWT

@@ -1,40 +1,70 @@
-# views.py
-
-from django.contrib.auth import authenticate
-from rest_framework.views import APIView
+from django.shortcuts import render
 from rest_framework.response import Response
-from rest_framework import status
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-class LoginView(APIView):
+class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
-        username = request.data.get('username')
-        password = request.data.get('password')
+        try:
+            response = super().post(request, *args, **kwargs)
+            tokens = response.data
+            access_token = tokens['access']
+            refresh_token = tokens['refresh']
 
-        user = authenticate(username=username, password=password)
-        if user is not None:
-            refresh = RefreshToken.for_user(user)
+            res = Response({"success": True})
+            res.set_cookie(
+                key="access_token",
+                value=access_token,
+                httponly=True,
+                secure=False,  # Отключите secure для тестирования
+                samesite='Lax',
+                path='/'
+            )
+            res.set_cookie(
+                key="refresh_token",
+                value=refresh_token,
+                httponly=True,
+                secure=False,  # Отключите secure для тестирования
+                samesite='Lax',
+                path='/'
+            )
+            return res
+        except Exception as e:
+            print(f"Error during login: {e}")  # Логируем ошибку
+            return Response({"success": False}, status=400)
 
-            # Создаем HTTP-only cookie
-            response = Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            }, status=status.HTTP_200_OK)
+class CustomTokenRefreshView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        try:
+            refresh_token = request.COOKIES.get('refresh_token')
+            request.data['refresh'] = refresh_token
+            response = super().post(request, *args, **kwargs)
+            tokens = response.data
+            access_token = tokens['access']
 
-            response.set_cookie(
-                key='auth_token',
-                value=str(refresh.access_token),
+            res = Response({'refreshed': True})
+            res.set_cookie(
+                key='access_token',
+                value=access_token,
                 httponly=True,
                 secure=False,  # Установите True, если используете HTTPS
                 samesite='Lax',
-                max_age=3600,  # Время жизни токена в секундах
+                path='/'
             )
-            return response
-        else:
-            return Response({'detail': 'Неверный логин или пароль'}, status=status.HTTP_401_UNAUTHORIZED)
+            return res
+        except Exception as e:
+            print(e)
+            return Response({'refreshed': False}, status=400)
 
-class LogoutView(APIView):
-    def post(self, request, *args, **kwargs):
-        response = Response({'detail': 'Вы успешно вышли'}, status=status.HTTP_200_OK)
-        response.delete_cookie('auth_token')  # Удаляем куки
-        return response
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout(request):
+    try:
+        res = Response({'success': True})
+        res.delete_cookie('access_token', path='/', samesite='Lax')
+        res.delete_cookie('refresh_token', path='/', samesite='Lax')
+        return res
+    except Exception as e:
+        print(e)
+        return Response({'success': False}, status=400)
