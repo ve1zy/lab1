@@ -3,6 +3,12 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
@@ -11,28 +17,28 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             tokens = response.data
             access_token = tokens['access']
             refresh_token = tokens['refresh']
-
-            res = Response({"success": True})
+            res = Response()
+            res.data = {"success": True}
             res.set_cookie(
-                key="access_token",
-                value=access_token,
-                httponly=True,
-                secure=False,  # Отключите secure для тестирования
-                samesite='Lax',
-                path='/'
-            )
+				key="access_token",
+				value=access_token,
+				httponly=True,
+				secure=True,  # Измените на False для локальной разработки
+				samesite='None',
+				path='/'
+			)
             res.set_cookie(
                 key="refresh_token",
                 value=refresh_token,
                 httponly=True,
-                secure=False,  # Отключите secure для тестирования
-                samesite='Lax',
+                secure=True,
+                samesite='None',
                 path='/'
             )
             return res
         except Exception as e:
-            print(f"Error during login: {e}")  # Логируем ошибку
-            return Response({"success": False}, status=400)
+            print(f"Error: {e}")  # Вывод ошибки в консоль
+            return Response({"success": False})
 
 class CustomTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):

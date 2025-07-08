@@ -86,7 +86,8 @@ REST_FRAMEWORK = {
         'api_auth.authentication.CookiesJWTAuthentication',  # Используйте кастомную аутентификацию
     ),
 }
-
+MIDDLEWARE.insert(2, 'corsheaders.middleware.CorsMiddleware')
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4028",  # Разрешите домен фронтенда
 ]
